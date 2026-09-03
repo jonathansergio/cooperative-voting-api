@@ -212,6 +212,9 @@
 								<param>XML</param>
 							</outputFormats>
 							<mutationThreshold>80</mutationThreshold>
+							<!-- Until the first service exists there is nothing to mutate; an empty
+							     run is not a failure. -->
+							<failWhenNoMutations>false</failWhenNoMutations>
 						</configuration>
 						<dependencies>
 							<dependency>
