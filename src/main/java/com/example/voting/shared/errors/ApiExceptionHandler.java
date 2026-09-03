@@ -21,4 +21,9 @@ class ApiExceptionHandler {
     ProblemDetail handleConflict(ConflictException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
+
+    @ExceptionHandler(UnprocessableException.class)
+    ProblemDetail handleUnprocessable(UnprocessableException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+    }
 }
