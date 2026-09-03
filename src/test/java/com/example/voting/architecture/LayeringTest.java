@@ -8,6 +8,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import java.time.Instant;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -58,6 +59,12 @@ class LayeringTest {
             .should()
             .haveSimpleNameEndingWith("Controller")
             .because("the naming is what the other rules key on");
+
+    @ArchTest
+    static final ArchRule time_is_read_from_the_injected_clock = noClasses()
+            .should()
+            .callMethod(Instant.class, "now")
+            .because("time comes from the injected Clock, so time-dependent rules stay testable");
 
     @ArchTest
     static final ArchRule dependencies_arrive_through_the_constructor = fields().should()
