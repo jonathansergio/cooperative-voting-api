@@ -1,0 +1,54 @@
+package com.example.voting.session;
+
+import com.example.voting.shared.errors.ConflictException;
+import com.example.voting.shared.errors.NotFoundException;
+import com.example.voting.topic.TopicRepository;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+class VotingSessionService {
+
+    private static final Duration DEFAULT_DURATION = Duration.ofMinutes(1);
+
+    private final VotingSessionRepository sessions;
+    private final TopicRepository topics;
+    private final Clock clock;
+
+    VotingSessionService(VotingSessionRepository sessions, TopicRepository topics, Clock clock) {
+        this.sessions = sessions;
+        this.topics = topics;
+        this.clock = clock;
+    }
+
+    @Transactional
+    VotingSessionResponse open(Long topicId, Integer durationMinutes) {
+        if (!topics.existsById(topicId)) {
+            throw new NotFoundException("Topic %d not found".formatted(topicId));
+        }
+        Instant now = clock.instant();
+        VotingSession session = new VotingSession(topicId, now, durationOf(durationMinutes));
+        try {
+            // Uniqueness belongs to the database. Asking first and inserting afterwards would let two
+            // concurrent requests both pass the check and open two sessions on the same topic.
+            return VotingSessionResponse.of(sessions.saveAndFlush(session), now);
+        } catch (DataIntegrityViolationException alreadyOpened) {
+            throw new ConflictException("Topic %d already has a voting session".formatted(topicId));
+        }
+    }
+
+    @Transactional(readOnly = true)
+    VotingSessionResponse find(Long id) {
+        return sessions.findById(id)
+                .map(session -> VotingSessionResponse.of(session, clock.instant()))
+                .orElseThrow(() -> new NotFoundException("Voting session %d not found".formatted(id)));
+    }
+
+    private Duration durationOf(Integer minutes) {
+        return minutes == null ? DEFAULT_DURATION : Duration.ofMinutes(minutes);
+    }
+}
