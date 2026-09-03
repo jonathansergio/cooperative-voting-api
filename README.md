@@ -1,0 +1,89 @@
+# Cooperative Voting API
+
+API REST para gerenciar pautas e sessões de votação em assembleias de cooperativas. Cada associado tem
+direito a um voto por pauta, e o resultado é apurado ao fim da sessão.
+
+## Como rodar (caminho mais curto)
+
+```bash
+docker compose --profile app up --build
+```
+
+Sobe PostgreSQL e a API juntos. A API responde em `http://localhost:8080` e o health check em
+`http://localhost:8080/actuator/health`.
+
+Para desenvolver com a aplicação na máquina e só o banco em container:
+
+```bash
+make db-up      # sobe o PostgreSQL
+make run        # roda a API na porta 8080
+make verify     # gate completo: formatação + testes + cobertura
+make help       # lista todos os alvos
+```
+
+Pré-requisitos, variáveis de ambiente e detalhes de execução: **[`docs/local-setup.md`](docs/local-setup.md)**.
+
+## Stack
+
+| Camada | Escolha |
+| --- | --- |
+| Runtime | Java 21, Spring Boot 4.1 |
+| Build | Maven (via `./mvnw`, não precisa ter Maven instalado) |
+| Web | Spring MVC + Bean Validation |
+| Persistência | Spring Data JPA · PostgreSQL · Flyway |
+| Testes | JUnit 5 · Testcontainers (PostgreSQL real) · ArchUnit |
+| Qualidade | Spotless (formatação) · JaCoCo (gate de cobertura) · PIT (mutação) |
+| Carga | k6 |
+| Observabilidade | Spring Actuator · logs com correlation id |
+
+## Estrutura
+
+O código é agrupado **por domínio**, não por tipo de arquivo. Cada domínio segue
+`Controller → Service → Repository`:
+
+```
+src/main/java/com/example/voting/
+├── topic/         pautas
+├── session/       sessões de votação
+├── vote/          votos e apuração
+├── eligibility/   contrato de elegibilidade do associado (porta)
+├── integration/   adaptadores de sistemas externos
+├── screens/       contrato de telas do app mobile (Anexo 1)
+└── shared/        erros, configuração, logging
+```
+
+- `Controller` cuida só de HTTP: valida a entrada, chama **uma** função de serviço e devolve a resposta.
+- `Service` tem a regra de negócio e é dono da transação. Lança exceções de domínio, nunca exceções de HTTP.
+- `Repository` só acessa dados.
+
+Um teste de ArchUnit garante que essas dependências não sejam invertidas.
+
+## Glossário
+
+O código é escrito em inglês; o enunciado do domínio é em português.
+
+| Português | Código |
+| --- | --- |
+| Pauta | `Topic` |
+| Sessão de votação | `VotingSession` |
+| Voto | `Vote` |
+| Associado | `Member` |
+| Sim / Não | `YES` / `NO` |
+
+## Endpoints
+
+_A preencher conforme as fatias forem entregues._ A documentação interativa (OpenAPI/Swagger UI) fica em
+`http://localhost:8080/swagger-ui.html`.
+
+## Decisões de projeto
+
+As decisões e seus motivos estão registrados em [`docs/adr/`](docs/adr/), um arquivo curto por decisão.
+
+## Testes de carga
+
+_A preencher._ O script fica em [`load/voting.js`](load/voting.js) e roda com `make load` contra uma API já
+no ar.
+
+## Licença
+
+MIT — ver [`LICENSE`](LICENSE).
