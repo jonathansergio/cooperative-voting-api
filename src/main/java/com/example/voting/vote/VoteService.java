@@ -1,6 +1,7 @@
 package com.example.voting.vote;
 
 import com.example.voting.session.VotingSessionService;
+import com.example.voting.session.VotingStatus;
 import com.example.voting.shared.errors.ConflictException;
 import com.example.voting.shared.errors.NotFoundException;
 import com.example.voting.shared.errors.UnprocessableException;
@@ -27,9 +28,7 @@ class VoteService {
 
     @Transactional
     VoteResponse cast(long topicId, String memberId, Choice choice) {
-        if (!topics.existsById(topicId)) {
-            throw new NotFoundException("Topic %d not found".formatted(topicId));
-        }
+        requireTheTopicExists(topicId);
         requireAnOpenSession(topicId);
         try {
             // A member votes at most once per topic, and the unique index is what enforces it.
@@ -38,6 +37,30 @@ class VoteService {
             return VoteResponse.from(votes.saveAndFlush(new Vote(topicId, memberId, choice, clock.instant())));
         } catch (DataIntegrityViolationException alreadyVoted) {
             throw new ConflictException("Member %s has already voted on topic %d".formatted(memberId, topicId));
+        }
+    }
+
+    /**
+     * The result is available while the voting is still running, flagged as such, and stays
+     * available once it closes. What it is never available for is a topic nobody has put to vote.
+     */
+    @Transactional(readOnly = true)
+    VoteResultResponse resultFor(long topicId) {
+        requireTheTopicExists(topicId);
+        VotingStatus status = sessions.statusFor(topicId);
+        if (status == VotingStatus.NOT_OPENED) {
+            throw new UnprocessableException("Topic %d has no voting session".formatted(topicId));
+        }
+        return VoteResultResponse.of(
+                topicId,
+                votes.countByTopicIdAndChoice(topicId, Choice.YES),
+                votes.countByTopicIdAndChoice(topicId, Choice.NO),
+                status == VotingStatus.OPEN);
+    }
+
+    private void requireTheTopicExists(long topicId) {
+        if (!topics.existsById(topicId)) {
+            throw new NotFoundException("Topic %d not found".formatted(topicId));
         }
     }
 
