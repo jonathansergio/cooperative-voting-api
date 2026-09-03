@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-class VotingSessionService {
+public class VotingSessionService {
 
     private static final Duration DEFAULT_DURATION = Duration.ofMinutes(1);
 
@@ -39,6 +39,14 @@ class VotingSessionService {
         } catch (DataIntegrityViolationException alreadyOpened) {
             throw new ConflictException("Topic %d already has a voting session".formatted(topicId));
         }
+    }
+
+    /** Answers, for another domain, whether the topic is accepting votes right now. */
+    @Transactional(readOnly = true)
+    public VotingStatus statusFor(Long topicId) {
+        return sessions.findByTopicId(topicId)
+                .map(session -> session.isOpenAt(clock.instant()) ? VotingStatus.OPEN : VotingStatus.CLOSED)
+                .orElse(VotingStatus.NOT_OPENED);
     }
 
     @Transactional(readOnly = true)
