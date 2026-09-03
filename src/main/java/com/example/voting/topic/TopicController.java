@@ -3,7 +3,7 @@ package com.example.voting.topic;
 import com.example.voting.shared.errors.NotFoundException;
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.time.Instant;
+import java.time.Clock;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,14 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 class TopicController {
 
     private final TopicRepository topics;
+    private final Clock clock;
 
-    TopicController(TopicRepository topics) {
+    TopicController(TopicRepository topics, Clock clock) {
         this.topics = topics;
+        this.clock = clock;
     }
 
     @PostMapping
     ResponseEntity<TopicResponse> register(@Valid @RequestBody CreateTopicRequest request) {
-        Topic topic = topics.save(new Topic(request.title(), request.description(), Instant.now()));
+        Topic topic = topics.save(new Topic(request.title(), request.description(), clock.instant()));
         return ResponseEntity.created(URI.create("/api/v1/topics/" + topic.id()))
                 .body(TopicResponse.from(topic));
     }
