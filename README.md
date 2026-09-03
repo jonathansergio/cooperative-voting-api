@@ -76,6 +76,10 @@ O código é escrito em inglês; o enunciado do domínio é em português.
 | --- | --- | --- | --- |
 | `POST` | `/api/v1/topics` | Cadastra uma pauta | `201` com a pauta e o cabeçalho `Location`, `400` se o título faltar |
 | `GET` | `/api/v1/topics/{id}` | Busca uma pauta | `200` com a pauta, `404` se não existir |
+| `POST` | `/api/v1/topics/{id}/sessions` | Abre a sessão de votação da pauta | `201` com a sessão, `404` se a pauta não existir, `409` se já houver sessão |
+| `GET` | `/api/v1/sessions/{id}` | Busca a sessão e diz se está aberta | `200` com a sessão, `404` se não existir |
+
+A abertura aceita `durationMinutes` no corpo. Sem esse campo, a sessão fica aberta por **um minuto**.
 
 Todo erro sai no formato RFC 7807 (`application/problem+json`), vindo de um único tratador central.
 
