@@ -17,6 +17,9 @@ spring:
           batch_size: 50
   flyway:
     enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
 
 server:
   port: ${PORT:8080}
