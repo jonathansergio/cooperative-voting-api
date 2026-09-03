@@ -2,6 +2,7 @@ package com.example.voting.vote;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,5 +22,10 @@ class VoteController {
     @ResponseStatus(HttpStatus.CREATED)
     VoteResponse cast(@PathVariable long topicId, @Valid @RequestBody CastVoteRequest request) {
         return votes.cast(topicId, request.memberId(), request.choice());
+    }
+
+    @GetMapping("/api/v1/topics/{topicId}/result")
+    VoteResultResponse result(@PathVariable long topicId) {
+        return votes.resultFor(topicId);
     }
 }
