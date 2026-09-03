@@ -72,8 +72,14 @@ O código é escrito em inglês; o enunciado do domínio é em português.
 
 ## Endpoints
 
-_A preencher conforme as fatias forem entregues._ A documentação interativa (OpenAPI/Swagger UI) fica em
-`http://localhost:8080/swagger-ui.html`.
+| Método | Rota | O que faz | Respostas |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/topics` | Cadastra uma pauta | `201` com a pauta e o cabeçalho `Location`, `400` se o título faltar |
+| `GET` | `/api/v1/topics/{id}` | Busca uma pauta | `200` com a pauta, `404` se não existir |
+
+Todo erro sai no formato RFC 7807 (`application/problem+json`), vindo de um único tratador central.
+
+A documentação interativa (OpenAPI/Swagger UI) entra em uma fatia posterior.
 
 ## Decisões de projeto
 
