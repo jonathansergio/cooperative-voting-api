@@ -81,6 +81,10 @@ O código é escrito em inglês; o enunciado do domínio é em português.
 | `POST` | `/api/v1/topics/{id}/votes` | Registra o voto de um associado | `201` com o voto, `400` se a escolha não for `YES`/`NO`, `404` se a pauta não existir, `409` se o associado já votou, `422` se não houver sessão aberta |
 | `GET` | `/api/v1/topics/{id}/result` | Apura o resultado da pauta | `200` com a contagem, `404` se a pauta não existir, `422` se a pauta nunca foi posta em votação |
 
+O voto também consulta o serviço externo de elegibilidade do associado: quem não pode votar, ou cujo CPF o
+serviço não conhece, recebe `422`. Se esse serviço não responder, a resposta é `503` — a aplicação nunca
+supõe que alguém pode votar sem ter confirmado. Detalhes em [`docs/adr/0005`](docs/adr/0005-integracao-de-elegibilidade.md).
+
 A abertura aceita `durationMinutes` no corpo. Sem esse campo, a sessão fica aberta por **um minuto**.
 
 O voto leva `memberId` (o identificador do associado) e `choice`, que é `YES` ou `NO`.

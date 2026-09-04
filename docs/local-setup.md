@@ -40,6 +40,25 @@ Todas têm default para desenvolvimento local, então nada precisa ser exportado
 | `DATABASE_PASSWORD` | `voting` | senha do banco |
 | `DATABASE_POOL_SIZE` | `20` | tamanho do pool HikariCP |
 | `PORT` | `8080` | porta HTTP da API |
+| `ELIGIBILITY_MODE` | `remote` | `remote` consulta o serviço de elegibilidade de verdade; `stub` responde que todos podem votar |
+| `ELIGIBILITY_BASE_URL` | `https://user-info.herokuapp.com` | endereço do serviço de elegibilidade |
+| `ELIGIBILITY_CONNECT_TIMEOUT` | `2s` | tempo máximo para abrir a conexão |
+| `ELIGIBILITY_READ_TIMEOUT` | `3s` | tempo máximo para a resposta |
+
+### Sobre o serviço de elegibilidade
+
+O endereço que o enunciado indica é um aplicativo em camada gratuita da Heroku, plano encerrado em 2022, e
+provavelmente está fora do ar. O cliente real está implementado e é o padrão da aplicação, mas o
+`docker compose` sobe com `ELIGIBILITY_MODE=stub` para que a stack funcione sem depender de terceiros.
+
+Para exercitar a integração de verdade:
+
+```bash
+ELIGIBILITY_MODE=remote ELIGIBILITY_BASE_URL=https://user-info.herokuapp.com make run
+```
+
+Se o serviço não responder, o voto recebe `503`. A aplicação nunca supõe que um associado pode votar quando
+não conseguiu confirmar.
 
 ## 5. Comandos
 
