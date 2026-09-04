@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.example.voting.support.IntegrationTest;
 import com.example.voting.support.MutableClock;
 import java.time.Duration;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -22,11 +21,6 @@ class VotingSessionTest {
 
     @Autowired
     private MutableClock clock;
-
-    @BeforeEach
-    void startFromAKnownMoment() {
-        clock.reset();
-    }
 
     @Test
     void opensASessionForTheRequestedNumberOfMinutes() throws Exception {

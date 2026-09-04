@@ -1,5 +1,6 @@
 package com.example.voting.vote;
 
+import com.example.voting.eligibility.EligibilityChecker;
 import com.example.voting.session.VotingSessionService;
 import com.example.voting.session.VotingStatus;
 import com.example.voting.shared.errors.ConflictException;
@@ -17,12 +18,19 @@ class VoteService {
     private final VoteRepository votes;
     private final TopicRepository topics;
     private final VotingSessionService sessions;
+    private final EligibilityChecker eligibility;
     private final Clock clock;
 
-    VoteService(VoteRepository votes, TopicRepository topics, VotingSessionService sessions, Clock clock) {
+    VoteService(
+            VoteRepository votes,
+            TopicRepository topics,
+            VotingSessionService sessions,
+            EligibilityChecker eligibility,
+            Clock clock) {
         this.votes = votes;
         this.topics = topics;
         this.sessions = sessions;
+        this.eligibility = eligibility;
         this.clock = clock;
     }
 
@@ -30,6 +38,7 @@ class VoteService {
     VoteResponse cast(long topicId, String memberId, Choice choice) {
         requireTheTopicExists(topicId);
         requireAnOpenSession(topicId);
+        requireAnEligibleMember(memberId);
         try {
             // A member votes at most once per topic, and the unique index is what enforces it.
             // Reading the table first and inserting afterwards would let two simultaneous requests
@@ -56,6 +65,16 @@ class VoteService {
                 votes.countByTopicIdAndChoice(topicId, Choice.YES),
                 votes.countByTopicIdAndChoice(topicId, Choice.NO),
                 status == VotingStatus.OPEN);
+    }
+
+    private void requireAnEligibleMember(String memberId) {
+        switch (eligibility.statusOf(memberId)) {
+            case UNABLE_TO_VOTE ->
+                throw new UnprocessableException("Member %s is not allowed to vote".formatted(memberId));
+            case UNKNOWN_MEMBER ->
+                throw new UnprocessableException("Member %s is not a known member".formatted(memberId));
+            case ABLE_TO_VOTE -> {}
+        }
     }
 
     private void requireTheTopicExists(long topicId) {

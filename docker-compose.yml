@@ -27,6 +27,11 @@ services:
       DATABASE_URL: jdbc:postgresql://db:5432/voting
       DATABASE_USER: voting
       DATABASE_PASSWORD: voting
+      # The eligibility service named in the brief is a free-tier Heroku app and is very likely
+      # offline, so the ready-to-run stack uses the stub. The real client is the application's
+      # default: set ELIGIBILITY_MODE=remote to exercise it. See docs/adr/0005.
+      ELIGIBILITY_MODE: ${ELIGIBILITY_MODE:-stub}
+      ELIGIBILITY_BASE_URL: ${ELIGIBILITY_BASE_URL:-https://user-info.herokuapp.com}
     ports:
       - "8080:8080"
     healthcheck:
