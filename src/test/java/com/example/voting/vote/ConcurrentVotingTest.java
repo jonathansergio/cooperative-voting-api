@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.voting.shared.errors.ConflictException;
 import com.example.voting.support.IntegrationTest;
-import com.example.voting.support.MutableClock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -15,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.IntStream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -39,14 +37,6 @@ class ConcurrentVotingTest {
 
     @Autowired
     private VoteRepository stored;
-
-    @Autowired
-    private MutableClock clock;
-
-    @BeforeEach
-    void startFromAKnownMoment() {
-        clock.reset();
-    }
 
     @Test
     void acceptsOnlyOneVoteWhenTheSameMemberVotesManyTimesAtOnce() throws Exception {

@@ -21,6 +21,15 @@ spring:
     problemdetails:
       enabled: true
 
+voting:
+  eligibility:
+    # `remote` talks to the real registry; `stub` answers that everyone may vote. The upstream in the
+    # brief is a free-tier host that is likely offline, so local and CI runs use the stub.
+    mode: ${ELIGIBILITY_MODE:remote}
+    base-url: ${ELIGIBILITY_BASE_URL:https://user-info.herokuapp.com}
+    connect-timeout: ${ELIGIBILITY_CONNECT_TIMEOUT:2s}
+    read-timeout: ${ELIGIBILITY_READ_TIMEOUT:3s}
+
 server:
   port: ${PORT:8080}
   error:

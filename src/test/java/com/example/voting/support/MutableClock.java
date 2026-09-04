@@ -10,7 +10,7 @@ import java.time.ZoneOffset;
  * A clock the test moves by hand. Time-dependent behaviour is asserted by advancing it instead of
  * sleeping, which keeps the suite fast and deterministic.
  */
-public final class MutableClock extends Clock {
+public final class MutableClock extends Clock implements Resettable {
 
     private final ZoneId zone;
     private final Instant start;
@@ -34,6 +34,7 @@ public final class MutableClock extends Clock {
      * Returns the clock to its starting point. The bean is shared by every test in the context, so a
      * test that moves time must not leave it moved for the next one.
      */
+    @Override
     public void reset() {
         instant = start;
     }
