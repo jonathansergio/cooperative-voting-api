@@ -96,6 +96,10 @@ parcial, e continua disponível depois que ela fecha.
 
 Todo erro sai no formato RFC 7807 (`application/problem+json`), vindo de um único tratador central.
 
+Toda resposta traz o cabeçalho `X-Correlation-Id`, que também marca as linhas de log daquela requisição. Se
+você mandar esse cabeçalho, o valor é preservado. Detalhes em
+[`docs/adr/0006`](docs/adr/0006-logs-e-correlacao-de-requisicoes.md).
+
 ### Documentação interativa
 
 Com a aplicação no ar:
