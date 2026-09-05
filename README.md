@@ -110,6 +110,18 @@ Com a aplicação no ar:
 Cada operação traz o resumo, os campos e todos os códigos de resposta que o cliente precisa tratar. Um teste
 verifica que o documento continua descrevendo todos os endpoints, então ele não envelhece em silêncio.
 
+## Versionamento
+
+A versão fica no caminho: toda rota vive sob `/api/v1`, desde o primeiro endpoint. Mudança aditiva (campo
+novo na resposta, endpoint novo, campo opcional na requisição) continua na v1. Mudança que quebra um cliente
+correto — remover ou renomear campo, mudar tipo ou significado, tornar obrigatório o que era opcional,
+acrescentar valor a um enum existente — exige uma v2, servida em paralelo e reaproveitando os mesmos
+serviços.
+
+O motivo de tratar isso a sério: o cliente é um aplicativo instalado no telefone dos associados, e não há
+como forçar todo mundo a atualizar de uma vez. A régua completa está em
+[`docs/adr/0007`](docs/adr/0007-versionamento-da-api.md).
+
 ## Decisões de projeto
 
 As decisões e seus motivos estão registrados em [`docs/adr/`](docs/adr/), um arquivo curto por decisão.
