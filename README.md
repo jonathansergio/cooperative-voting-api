@@ -32,6 +32,7 @@ Pré-requisitos, variáveis de ambiente e detalhes de execução: **[`docs/local
 | Web | Spring MVC + Bean Validation |
 | Persistência | Spring Data JPA · PostgreSQL · Flyway |
 | Testes | JUnit 5 · Testcontainers (PostgreSQL real) · ArchUnit |
+| Documentação da API | springdoc-openapi (Swagger UI) |
 | Qualidade | Spotless (formatação) · JaCoCo (gate de cobertura) · PIT (mutação) |
 | Carga | k6 |
 | Observabilidade | Spring Actuator · logs com correlation id |
@@ -95,7 +96,15 @@ parcial, e continua disponível depois que ela fecha.
 
 Todo erro sai no formato RFC 7807 (`application/problem+json`), vindo de um único tratador central.
 
-A documentação interativa (OpenAPI/Swagger UI) entra em uma fatia posterior.
+### Documentação interativa
+
+Com a aplicação no ar:
+
+- **Swagger UI** — <http://localhost:8080/swagger-ui/index.html>
+- **OpenAPI (JSON)** — <http://localhost:8080/v3/api-docs>
+
+Cada operação traz o resumo, os campos e todos os códigos de resposta que o cliente precisa tratar. Um teste
+verifica que o documento continua descrevendo todos os endpoints, então ele não envelhece em silêncio.
 
 ## Decisões de projeto
 

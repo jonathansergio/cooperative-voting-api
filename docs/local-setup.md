@@ -29,6 +29,10 @@ make db-up   # sobe só o PostgreSQL na porta 5432
 make run     # roda a API na porta 8080
 ```
 
+Com a aplicação no ar, a documentação interativa fica em
+<http://localhost:8080/swagger-ui/index.html> e o documento OpenAPI em
+<http://localhost:8080/v3/api-docs>.
+
 ## 4. Variáveis de ambiente
 
 Todas têm default para desenvolvimento local, então nada precisa ser exportado para rodar.
