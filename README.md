@@ -9,8 +9,14 @@ direito a um voto por pauta, e o resultado é apurado ao fim da sessão.
 docker compose --profile app up --build
 ```
 
-Sobe PostgreSQL e a API juntos. A API responde em `http://localhost:8080` e o health check em
-`http://localhost:8080/actuator/health`.
+Sobe PostgreSQL e a API juntos, sem precisar de Java nem de Maven na máquina. A API responde em
+`http://localhost:8080`, o health check em `http://localhost:8080/actuator/health` e a documentação
+interativa em `http://localhost:8080/swagger-ui/index.html`.
+
+Nessa forma de subir, a consulta de elegibilidade do associado roda em modo `stub`, respondendo que todos
+podem votar. O motivo é que o serviço indicado no enunciado está hospedado em uma camada gratuita encerrada
+em 2022 e provavelmente não responde. O cliente real está implementado, testado e é o padrão da aplicação:
+`ELIGIBILITY_MODE=remote` usa ele. Ver [`docs/adr/0005`](docs/adr/0005-integracao-de-elegibilidade.md).
 
 Para desenvolver com a aplicação na máquina e só o banco em container:
 
@@ -142,9 +148,17 @@ O motivo de tratar isso a sério: o cliente é um aplicativo instalado no telefo
 como forçar todo mundo a atualizar de uma vez. A régua completa está em
 [`docs/adr/0007`](docs/adr/0007-versionamento-da-api.md).
 
+## Exercitando a API à mão
+
+[`docs/api.http`](docs/api.http) traz o roteiro completo, na ordem: cadastrar pauta, abrir sessão, votar,
+apurar, e cada uma das recusas com o status que elas devolvem. Os identificadores são capturados de uma
+resposta para a seguinte. O arquivo abre direto no IntelliJ IDEA e na extensão REST Client do VS Code.
+
 ## Decisões de projeto
 
-As decisões e seus motivos estão registrados em [`docs/adr/`](docs/adr/), um arquivo curto por decisão.
+Um arquivo curto por decisão em [`docs/adr/`](docs/adr/), com índice em
+[`docs/adr/README.md`](docs/adr/README.md): camadas, estado derivado da sessão, unicidade do voto no banco,
+apuração, integração externa, logs, versionamento, desempenho e o contrato de telas.
 
 ## Testes de carga
 
