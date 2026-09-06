@@ -42,7 +42,7 @@ Todas têm default para desenvolvimento local, então nada precisa ser exportado
 | `DATABASE_URL` | `jdbc:postgresql://localhost:5432/voting` | JDBC do PostgreSQL |
 | `DATABASE_USER` | `voting` | usuário do banco |
 | `DATABASE_PASSWORD` | `voting` | senha do banco |
-| `DATABASE_POOL_SIZE` | `20` | tamanho do pool HikariCP |
+| `DATABASE_POOL_SIZE` | `30` | tamanho do pool HikariCP (valor medido, ver ADR 0008) |
 | `PORT` | `8080` | porta HTTP da API |
 | `ELIGIBILITY_MODE` | `remote` | `remote` consulta o serviço de elegibilidade de verdade; `stub` responde que todos podem votar |
 | `ELIGIBILITY_BASE_URL` | `https://user-info.herokuapp.com` | endereço do serviço de elegibilidade |

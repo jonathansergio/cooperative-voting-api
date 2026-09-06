@@ -128,8 +128,31 @@ As decisões e seus motivos estão registrados em [`docs/adr/`](docs/adr/), um a
 
 ## Testes de carga
 
-_A preencher._ O script fica em [`load/voting.js`](load/voting.js) e roda com `make load` contra uma API já
-no ar.
+O cenário em [`load/voting.js`](load/voting.js) cadastra uma pauta, abre uma sessão e dispara votos de
+associados sempre distintos, consultando a apuração no meio da votação.
+
+```bash
+make db-up
+ELIGIBILITY_MODE=stub make run
+make load
+```
+
+Duzentos usuários simultâneos, noventa segundos, banco zerado antes de cada execução. **Uma execução
+registra mais de 250 mil votos**, sem nenhum voto recusado e sem nenhuma requisição com erro.
+
+| Pool de conexões | Votos por segundo | p95 do voto | p95 da apuração |
+| --- | --- | --- | --- |
+| 20 | 2.390 | 157,9 ms | 204,1 ms |
+| **30** (padrão) | **2.856** | **123,2 ms** | **222,4 ms** |
+| 50 | 2.909 | 114,4 ms | 298,1 ms |
+
+O pool ficou em 30 por medida, não por chute: entrega 19% mais votos por segundo que 20 e mantém a apuração
+com folga no orçamento de 300 ms. Cinquenta compra 2% de vazão a mais e paga 76 ms na apuração, terminando a
+dois milissegundos do limite.
+
+A apuração não carrega votos para a memória: o plano de execução confirma `Index Only Scan` com
+`Heap Fetches: 0`, contando 144 mil linhas em 11 ms. O que fica dentro dessas medições, o que ficou de fora e
+qual é o limite real do sistema estão em [`docs/adr/0008`](docs/adr/0008-desempenho-sob-carga.md).
 
 ## Licença
 
