@@ -6,6 +6,7 @@ import com.example.voting.topic.TopicRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,12 @@ public class VotingSessionService {
         } catch (DataIntegrityViolationException alreadyOpened) {
             throw new ConflictException("Topic %d already has a voting session".formatted(topicId));
         }
+    }
+
+    /** The topics accepting votes right now, answered in one query rather than one per topic. */
+    @Transactional(readOnly = true)
+    public List<Long> topicsAcceptingVotes() {
+        return sessions.topicIdsAcceptingVotesAt(clock.instant());
     }
 
     /** Answers, for another domain, whether the topic is accepting votes right now. */

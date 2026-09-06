@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-class VoteService {
+public class VoteService {
 
     private final VoteRepository votes;
     private final TopicRepository topics;
@@ -35,7 +35,7 @@ class VoteService {
     }
 
     @Transactional
-    VoteResponse cast(long topicId, String memberId, Choice choice) {
+    public VoteResponse cast(long topicId, String memberId, Choice choice) {
         requireTheTopicExists(topicId);
         requireAnOpenSession(topicId);
         requireAnEligibleMember(memberId);
