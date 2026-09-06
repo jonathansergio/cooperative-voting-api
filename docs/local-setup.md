@@ -44,6 +44,7 @@ Todas têm default para desenvolvimento local, então nada precisa ser exportado
 | `DATABASE_PASSWORD` | `voting` | senha do banco |
 | `DATABASE_POOL_SIZE` | `30` | tamanho do pool HikariCP (valor medido, ver ADR 0008) |
 | `PORT` | `8080` | porta HTTP da API |
+| `SCREENS_BASE_URL` | `http://localhost:8080` | endereço base nas URLs das telas do aplicativo |
 | `ELIGIBILITY_MODE` | `remote` | `remote` consulta o serviço de elegibilidade de verdade; `stub` responde que todos podem votar |
 | `ELIGIBILITY_BASE_URL` | `https://user-info.herokuapp.com` | endereço do serviço de elegibilidade |
 | `ELIGIBILITY_CONNECT_TIMEOUT` | `2s` | tempo máximo para abrir a conexão |

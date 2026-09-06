@@ -100,6 +100,26 @@ Toda resposta traz o cabeçalho `X-Correlation-Id`, que também marca as linhas 
 você mandar esse cabeçalho, o valor é preservado. Detalhes em
 [`docs/adr/0006`](docs/adr/0006-logs-e-correlacao-de-requisicoes.md).
 
+### Telas do aplicativo (anexo 1)
+
+Além da API REST, o servidor expõe o contrato de telas que o aplicativo móvel entende, no formato do anexo
+do enunciado. Cada resposta é uma tela inteira, e cada botão traz o endereço do passo seguinte, então o
+aplicativo caminha pelo fluxo sem conhecer nenhuma regra.
+
+| Método | Rota | Tela |
+| --- | --- | --- |
+| `GET` | `/api/v1/screens/topics` | `SELECAO` com as pautas em votação |
+| `POST` | `/api/v1/screens/topics/{id}/identify` | `FORMULARIO` pedindo o CPF de quem vai votar |
+| `POST` | `/api/v1/screens/topics/{id}/choose` | `SELECAO` com "Sim" e "Não" |
+| `POST` | `/api/v1/screens/topics/{id}/votes` | `FORMULARIO` de confirmação |
+
+O endereço base dessas URLs é configurável por `SCREENS_BASE_URL`, porque o emulador e um aparelho físico
+não alcançam o servidor pelo mesmo endereço.
+
+Um voto recusado também volta como tela, com o motivo em texto: esse cliente desenha telas, não sabe
+renderizar documento de erro. A API REST continua respondendo `409` e `422` normalmente. Detalhes em
+[`docs/adr/0009`](docs/adr/0009-telas-do-aplicativo.md).
+
 ### Documentação interativa
 
 Com a aplicação no ar:
