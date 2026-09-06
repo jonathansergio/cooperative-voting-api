@@ -24,6 +24,10 @@ spring:
       enabled: true
 
 voting:
+  screens:
+    # As telas devolvem URLs absolutas para os botões. O emulador e um aparelho físico não alcançam
+    # o servidor pelo mesmo endereço, então o domínio é configurável, como o enunciado pede.
+    base-url: ${SCREENS_BASE_URL:http://localhost:8080}
   eligibility:
     # `remote` talks to the real registry; `stub` answers that everyone may vote. The upstream in the
     # brief is a free-tier host that is likely offline, so local and CI runs use the stub.
