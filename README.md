@@ -3,15 +3,26 @@
 API REST para gerenciar pautas e sessões de votação em assembleias de cooperativas. Cada associado tem
 direito a um voto por pauta, e o resultado é apurado ao fim da sessão.
 
-## Como rodar (caminho mais curto)
+## Como testar (três passos, só com Docker)
 
-```bash
-docker compose --profile app up --build
-```
+1. **Subir a aplicação:**
 
-Sobe PostgreSQL e a API juntos, sem precisar de Java nem de Maven na máquina. A API responde em
-`http://localhost:8080`, o health check em `http://localhost:8080/actuator/health` e a documentação
-interativa em `http://localhost:8080/swagger-ui/index.html`.
+   ```bash
+   docker compose up
+   ```
+
+   Baixa a imagem já publicada e sobe PostgreSQL e API juntos. Nada é compilado, e não é preciso ter Java
+   nem Maven na máquina.
+
+2. **Importar no Postman** o arquivo
+   [`docs/postman/cooperative-voting-api.postman_collection.json`](docs/postman/cooperative-voting-api.postman_collection.json).
+
+3. **Clicar em Run collection.** Cada requisição verifica o status esperado e passa os identificadores para
+   a seguinte; a execução termina toda verde.
+
+Com a aplicação no ar, a API responde em `http://localhost:8080`, o health check em
+`http://localhost:8080/actuator/health` e a documentação interativa em
+`http://localhost:8080/swagger-ui/index.html`.
 
 Nessa forma de subir, a consulta de elegibilidade do associado roda em modo `stub`, respondendo que todos
 podem votar. O motivo é que o serviço indicado no enunciado está hospedado em uma camada gratuita encerrada
@@ -148,11 +159,22 @@ O motivo de tratar isso a sério: o cliente é um aplicativo instalado no telefo
 como forçar todo mundo a atualizar de uma vez. A régua completa está em
 [`docs/adr/0007`](docs/adr/0007-versionamento-da-api.md).
 
-## Exercitando a API à mão
+## Collection do Postman
 
-[`docs/api.http`](docs/api.http) traz o roteiro completo, na ordem: cadastrar pauta, abrir sessão, votar,
-apurar, e cada uma das recusas com o status que elas devolvem. Os identificadores são capturados de uma
-resposta para a seguinte. O arquivo abre direto no IntelliJ IDEA e na extensão REST Client do VS Code.
+[`docs/postman/cooperative-voting-api.postman_collection.json`](docs/postman/cooperative-voting-api.postman_collection.json)
+traz o roteiro completo em quatro pastas:
+
+1. **Fluxo principal** — cadastrar pauta, abrir sessão, votar e apurar;
+2. **Recusas** — cada uma com o status que devolve: voto repetido e sessão duplicada (`409`), escolha
+   inválida e pauta sem título (`400`), pauta inexistente (`404`), voto e resultado de pauta sem sessão
+   (`422`);
+3. **Telas do aplicativo** — o fluxo do anexo 1, incluindo o voto recusado devolvido como tela;
+4. **Operação** — health check, documento OpenAPI e correlação de requisição.
+
+Cada requisição verifica o status e o conteúdo esperados e guarda os identificadores para as seguintes, então
+**Run collection** executa tudo em sequência e termina verde. Cada execução cria a própria pauta, então pode
+ser repetida quantas vezes quiser. Se a API estiver em outro endereço, altere a variável `baseUrl` na aba
+**Variables** da collection.
 
 ## Decisões de projeto
 

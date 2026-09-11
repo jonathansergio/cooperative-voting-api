@@ -1,0 +1,454 @@
+{
+  "info": {
+    "name": "Cooperative Voting API",
+    "description": "Roteiro completo da API de votação em assembleia.\n\n**Como usar:** suba a aplicação com `docker compose up`, importe esta collection e clique em **Run collection**. Cada requisição verifica o status esperado e guarda os identificadores para as seguintes, então a execução em sequência deve terminar toda verde.\n\nCada execução cria a própria pauta, então pode ser rodada quantas vezes quiser.\n\nSe a API estiver em outro endereço, altere a variável `baseUrl` na aba **Variables** desta collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
+    { "key": "topicId", "value": "", "type": "string" },
+    { "key": "sessionId", "value": "", "type": "string" },
+    { "key": "topicWithoutSessionId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Fluxo principal",
+      "description": "Cadastrar pauta, abrir sessão, votar e apurar.",
+      "item": [
+        {
+          "name": "Cadastrar pauta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('devolve o endereço da pauta', () => pm.response.to.have.header('Location'));",
+                  "pm.collectionVariables.set('topicId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Reforma do estatuto\",\n  \"description\": \"Aprovação da nova redação do estatuto social\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/v1/topics"
+          }
+        },
+        {
+          "name": "Buscar pauta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('é a pauta cadastrada', () => pm.expect(pm.response.json().title).to.eql('Reforma do estatuto'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/topics/{{topicId}}" }
+        },
+        {
+          "name": "Abrir sessão de votação",
+          "description": "Aberta por 60 minutos, com folga para testar sem pressa. Sem o campo `durationMinutes`, a sessão fica aberta por um minuto.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('a sessão está aberta', () => pm.expect(pm.response.json().open).to.be.true);",
+                  "pm.collectionVariables.set('sessionId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"durationMinutes\": 60\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/sessions"
+          }
+        },
+        {
+          "name": "Consultar sessão",
+          "description": "O campo `open` é calculado na hora da consulta, comparando o momento atual com o horário de fechamento.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('continua aberta', () => pm.expect(pm.response.json().open).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/sessions/{{sessionId}}" }
+        },
+        {
+          "name": "Votar Sim",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"11111111111\",\n  \"choice\": \"YES\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/votes"
+          }
+        },
+        {
+          "name": "Votar Não, outro associado",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"22222222222\",\n  \"choice\": \"NO\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/votes"
+          }
+        },
+        {
+          "name": "Votar Sim, terceiro associado",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"33333333333\",\n  \"choice\": \"YES\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/votes"
+          }
+        },
+        {
+          "name": "Apurar resultado",
+          "description": "Disponível durante a votação, como parcial. O campo `votingOpen` diz se a sessão ainda está correndo.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const result = pm.response.json();",
+                  "pm.test('conta dois Sim e um Não', () => { pm.expect(result.yes).to.eql(2); pm.expect(result.no).to.eql(1); pm.expect(result.total).to.eql(3); });",
+                  "pm.test('a pauta está aprovada', () => pm.expect(result.outcome).to.eql('APPROVED'));",
+                  "pm.test('a votação ainda está aberta', () => pm.expect(result.votingOpen).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/result" }
+        }
+      ]
+    },
+    {
+      "name": "2. Recusas",
+      "description": "Cada recusa devolve RFC 7807 (`application/problem+json`) com o motivo no campo `detail`.",
+      "item": [
+        {
+          "name": "409 · associado votando duas vezes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('formato RFC 7807', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/problem+json'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"11111111111\",\n  \"choice\": \"NO\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/votes"
+          }
+        },
+        {
+          "name": "409 · segunda sessão na mesma pauta",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('409 Conflict', () => pm.response.to.have.status(409));"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/sessions"
+          }
+        },
+        {
+          "name": "400 · escolha que não é YES nem NO",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('400 Bad Request', () => pm.response.to.have.status(400));"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"44444444444\",\n  \"choice\": \"TALVEZ\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}/votes"
+          }
+        },
+        {
+          "name": "400 · pauta sem título",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('400 Bad Request', () => pm.response.to.have.status(400));"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"   \"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics"
+          }
+        },
+        {
+          "name": "404 · pauta que não existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('404 Not Found', () => pm.response.to.have.status(404));"] }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/topics/999999999" }
+        },
+        {
+          "name": "Cadastrar pauta que não vai para votação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('topicWithoutSessionId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Pauta ainda não levada a votação\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics"
+          }
+        },
+        {
+          "name": "422 · votar em pauta sem sessão",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('422 Unprocessable Content', () => pm.response.to.have.status(422));"] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"55555555555\",\n  \"choice\": \"YES\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/topics/{{topicWithoutSessionId}}/votes"
+          }
+        },
+        {
+          "name": "422 · resultado de pauta sem sessão",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('422 Unprocessable Content', () => pm.response.to.have.status(422));"] }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/topics/{{topicWithoutSessionId}}/result" }
+        }
+      ]
+    },
+    {
+      "name": "3. Telas do aplicativo (anexo 1)",
+      "description": "O contrato de telas FORMULARIO e SELECAO. Cada resposta é uma tela inteira, e cada botão traz o endereço do passo seguinte.",
+      "item": [
+        {
+          "name": "Tela de seleção com as pautas em votação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const screen = pm.response.json();",
+                  "pm.test('tela do tipo SELECAO', () => pm.expect(screen.tipo).to.eql('SELECAO'));",
+                  "const topicId = pm.collectionVariables.get('topicId');",
+                  "pm.test('lista a pauta em votação', () => pm.expect(screen.itens.some(item => item.url.endsWith(`/topics/${topicId}/identify`))).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/screens/topics" }
+        },
+        {
+          "name": "Tela de formulário pedindo o CPF",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const screen = pm.response.json();",
+                  "pm.test('tela do tipo FORMULARIO', () => pm.expect(screen.tipo).to.eql('FORMULARIO'));",
+                  "pm.test('tem campo para o CPF', () => pm.expect(screen.itens.some(item => item.tipo === 'INPUT_TEXTO' && item.id === 'memberId')).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "POST", "url": "{{baseUrl}}/api/v1/screens/topics/{{topicId}}/identify" }
+        },
+        {
+          "name": "Tela de seleção com Sim e Não",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const screen = pm.response.json();",
+                  "pm.test('oferece Sim e Não', () => pm.expect(screen.itens.map(item => item.texto)).to.eql(['Sim', 'Não']));",
+                  "pm.test('cada opção carrega quem está votando', () => pm.expect(screen.itens[0].body.memberId).to.eql('66666666666'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"66666666666\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/screens/topics/{{topicId}}/choose"
+          }
+        },
+        {
+          "name": "Votar pela tela e receber a confirmação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('confirma o registro', () => pm.expect(pm.response.json().itens[0].texto).to.include('registrado'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"66666666666\",\n  \"choice\": \"YES\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/screens/topics/{{topicId}}/votes"
+          }
+        },
+        {
+          "name": "Voto recusado também volta como tela",
+          "description": "O aplicativo desenha telas e não sabe renderizar um documento de erro, então a recusa vem como texto numa tela.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('explica que o associado já votou', () => pm.expect(pm.response.json().itens[0].texto).to.include('já votou'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"memberId\": \"66666666666\",\n  \"choice\": \"NO\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{baseUrl}}/api/v1/screens/topics/{{topicId}}/votes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Operação",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('aplicação no ar', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/actuator/health" }
+        },
+        {
+          "name": "Documento OpenAPI",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/v3/api-docs" }
+        },
+        {
+          "name": "Correlação de requisição",
+          "description": "O identificador enviado volta no cabeçalho da resposta e marca as linhas de log dessa requisição.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('devolve o mesmo identificador', () => pm.expect(pm.response.headers.get('X-Correlation-Id')).to.eql('rastro-do-avaliador'));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Correlation-Id", "value": "rastro-do-avaliador" }],
+            "url": "{{baseUrl}}/api/v1/topics/{{topicId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
