@@ -5,7 +5,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.voting.eligibility.EligibilityStatus;
+import com.example.voting.shared.errors.UpstreamUnavailableException;
 import com.example.voting.support.IntegrationTest;
+import com.example.voting.support.ProgrammableEligibility;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,9 @@ class ScreenFlowTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ProgrammableEligibility eligibility;
 
     @Test
     void listsTopicsOpenForVotingAsASelectionScreen() throws Exception {
@@ -108,6 +114,41 @@ class ScreenFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tipo").value("FORMULARIO"))
                 .andExpect(jsonPath("$.itens[0].texto").value(Matchers.containsString("já votou")));
+    }
+
+    @Test
+    void tellsTheMemberWhatToDoWhenTheTopicHasNoDescription() throws Exception {
+        long topicId = topicWithAnOpenSession("Prestação de contas");
+
+        mockMvc.perform(post("/api/v1/screens/topics/%d/identify".formatted(topicId)))
+                .andExpect(jsonPath("$.itens[0].tipo").value("TEXTO"))
+                .andExpect(jsonPath("$.itens[0].texto").value("Informe seu CPF para votar."));
+    }
+
+    @Test
+    void reportsATopicThatDoesNotExist() throws Exception {
+        mockMvc.perform(post("/api/v1/screens/topics/999999999/identify")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void explainsOnAScreenThatTheMemberIsNotAllowedToVote() throws Exception {
+        long topicId = topicWithAnOpenSession("Reforma do estatuto");
+        eligibility.answer("99999999999", EligibilityStatus.UNABLE_TO_VOTE);
+
+        screenVote(topicId, "99999999999", "YES")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tipo").value("FORMULARIO"))
+                .andExpect(jsonPath("$.itens[0].texto").value(Matchers.containsString("não está habilitado")));
+    }
+
+    @Test
+    void explainsOnAScreenThatEligibilityCouldNotBeConfirmed() throws Exception {
+        long topicId = topicWithAnOpenSession("Reforma do estatuto");
+        eligibility.failWith(new UpstreamUnavailableException("registry down", new RuntimeException()));
+
+        screenVote(topicId, "88888888888", "YES")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.itens[0].texto").value(Matchers.containsString("Não foi possível confirmar")));
     }
 
     private ResultActions screenVote(long topicId, String memberId, String choice) throws Exception {
