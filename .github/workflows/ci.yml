@@ -50,3 +50,26 @@ jobs:
           name: pitest-report
           path: target/pit-reports/
           if-no-files-found: ignore
+
+  evaluator-path:
+    name: evaluator path
+    runs-on: ubuntu-latest
+    # Exactly what an evaluator does: build the image, start the stack, run the Postman collection.
+    # It catches a broken image or a collection that drifted from the API before anyone else does.
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+      - name: Start the stack from this source
+        run: docker compose up --build --detach --wait --wait-timeout 300
+      - name: Run the Postman collection
+        run: >-
+          docker run --rm --network host
+          -v "$PWD/docs/postman:/etc/newman"
+          postman/newman:alpine
+          run cooperative-voting-api.postman_collection.json --color off
+      - name: Show the API log
+        if: failure()
+        run: docker compose logs app
+      - name: Stop the stack
+        if: always()
+        run: docker compose down --volumes
