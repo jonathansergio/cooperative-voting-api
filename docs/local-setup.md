@@ -82,7 +82,7 @@ não conseguiu confirmar.
 | `make lint` | confere formatação sem reescrever arquivos |
 | `make format` | formata o código |
 | `make cov` | roda `verify` e aponta o relatório de cobertura |
-| `make mutation` | teste de mutação sobre os serviços (lento, sob demanda) |
+| `make mutation` | teste de mutação sobre todo o domínio, sob demanda; os testes gerados com banco ficam de fora dele e rodam no `make verify` |
 | `make build` | empacota o jar sem rodar testes |
 | `make load` | teste de carga com k6 contra uma API já no ar |
 | `make up` / `make down` | sobe/derruba a stack inteira em containers |

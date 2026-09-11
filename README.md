@@ -48,7 +48,7 @@ Pré-requisitos, variáveis de ambiente e detalhes de execução: **[`docs/local
 | Build | Maven (via `./mvnw`, não precisa ter Maven instalado) |
 | Web | Spring MVC + Bean Validation |
 | Persistência | Spring Data JPA · PostgreSQL · Flyway |
-| Testes | JUnit 5 · Testcontainers (PostgreSQL real) · ArchUnit |
+| Testes | JUnit · Testcontainers (PostgreSQL real) · ArchUnit · jqwik · Newman |
 | Documentação da API | springdoc-openapi (Swagger UI) |
 | Qualidade | Spotless (formatação) · JaCoCo (gate de cobertura) · PIT (mutação) |
 | Carga | k6 |
@@ -181,6 +181,25 @@ ser repetida quantas vezes quiser. Se a API estiver em outro endereço, altere a
 Um arquivo curto por decisão em [`docs/adr/`](docs/adr/), com índice em
 [`docs/adr/README.md`](docs/adr/README.md): camadas, estado derivado da sessão, unicidade do voto no banco,
 apuração, integração externa, logs, versionamento, desempenho e o contrato de telas.
+
+## Testes automatizados
+
+`make verify` roda a suíte inteira, 70 testes, e é o mesmo gate que o CI exige para mergear.
+
+| Tipo | O que prova |
+| --- | --- |
+| Integração com PostgreSQL real | cada endpoint, cada recusa e cada código de status, via Testcontainers |
+| Concorrência | 16 votos simultâneos do mesmo associado: exatamente um é aceito |
+| Cenários gerados com semente fixa | em sequências aleatórias de votos com repetição, só o primeiro voto de cada associado entra e a apuração bate com o que foi aceito; e nenhuma entrada arbitrária no corpo do voto produz erro 500 |
+| Propriedades (jqwik) | o desfecho da apuração para qualquer contagem, e a janela da sessão para qualquer duração e instante, incluindo o instante exato do fechamento |
+| Integração externa | o contrato do serviço de elegibilidade com transporte simulado, e um registro lento de verdade provando que o timeout corta a chamada com `503` |
+| Arquitetura (ArchUnit) | a direção das camadas, a hora vinda do relógio injetado e a injeção por construtor |
+| Mutação (PIT) | todo o domínio: 95 mutantes gerados, 95 mortos |
+| Caminho do avaliador | no CI, constrói a imagem, sobe o compose e executa a collection do Postman |
+
+O teste de mutação roda sob demanda com `make mutation` e num job próprio do CI, porque leva alguns minutos.
+Os cenários gerados com banco ficam fora dele: todo mutante morre sem eles, e continuam rodando em todo
+`make verify`.
 
 ## Testes de carga
 

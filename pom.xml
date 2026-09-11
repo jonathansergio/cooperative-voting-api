@@ -19,6 +19,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<archunit.version>1.4.1</archunit.version>
+		<jqwik.version>1.10.1</jqwik.version>
 		<springdoc.version>3.1.0</springdoc.version>
 		<spotless.version>2.46.1</spotless.version>
 		<jacoco.version>0.8.13</jacoco.version>
@@ -106,6 +107,12 @@
 			<groupId>com.tngtech.archunit</groupId>
 			<artifactId>archunit-junit5</artifactId>
 			<version>${archunit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.jqwik</groupId>
+			<artifactId>jqwik</artifactId>
+			<version>${jqwik.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -218,6 +225,13 @@
 								<param>com.example.voting.*Config</param>
 								<param>com.example.voting.*Properties</param>
 							</excludedClasses>
+							<!-- These drive the API with many generated scenarios against the database and run in
+							     every `verify`. Every mutant dies without them, so rerunning them for each mutant
+							     would only add time. -->
+							<excludedTestClasses>
+								<param>com.example.voting.vote.GeneratedVotesTest</param>
+								<param>com.example.voting.vote.ArbitraryVoteInputTest</param>
+							</excludedTestClasses>
 							<targetTests>
 								<param>com.example.voting.*</param>
 							</targetTests>
