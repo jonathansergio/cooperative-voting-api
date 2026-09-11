@@ -39,11 +39,11 @@ db-up: ## Start PostgreSQL only
 db-down: ## Stop the database
 	docker compose down
 
-up: ## Start the whole stack (API + database) in containers
-	docker compose --profile app up --build -d
+up: ## Build the API from this source and start the whole stack in containers
+	docker compose up --build -d
 
 down: ## Stop the whole stack
-	docker compose --profile app down
+	docker compose down
 
 load: ## Run the k6 load test against a running API
 	docker run --rm --network host -v $(PWD)/load:/load grafana/k6 run /load/voting.js

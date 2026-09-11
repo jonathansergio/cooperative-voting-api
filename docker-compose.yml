@@ -15,10 +15,11 @@ services:
       timeout: 3s
       retries: 5
 
-  # Full stack in one command: `docker compose --profile app up --build`.
-  # Left out of the default `docker compose up -d db` used while developing on the host.
+  # The API. `docker compose up` pulls the published image, so nothing is compiled on the machine of
+  # whoever is testing; if that image cannot be pulled, Compose builds it from this repository instead.
+  # `docker compose up -d db` still starts only the database, for development on the host.
   app:
-    profiles: ["app"]
+    image: ghcr.io/jonathansergio/cooperative-voting-api:latest
     build: .
     depends_on:
       db:

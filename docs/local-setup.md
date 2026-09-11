@@ -17,10 +17,18 @@ rodando para `make test` e `make verify`.
 ## 2. Subindo tudo em containers
 
 ```bash
-docker compose --profile app up --build
+docker compose up
 ```
 
 Sobe banco e API. A API só inicia depois que o health check do banco passa.
+
+A imagem da API é baixada de `ghcr.io/jonathansergio/cooperative-voting-api`, publicada automaticamente a
+cada mudança na `main`. Se ela não puder ser baixada, o Compose constrói a partir do código deste
+repositório. Para forçar a construção local, depois de alterar o código:
+
+```bash
+make up      # docker compose up --build -d
+make down
 
 ## 3. Desenvolvendo na máquina
 
