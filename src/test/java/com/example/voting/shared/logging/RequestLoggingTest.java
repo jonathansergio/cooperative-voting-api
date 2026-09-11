@@ -92,6 +92,16 @@ class RequestLoggingTest {
                 .noneMatch(message -> message.contains("/actuator/health"));
     }
 
+    @Test
+    void reportsHowLongTheRequestTookAsAPlausibleNumberOfMilliseconds() throws Exception {
+        mockMvc.perform(get(SOME_PATH));
+
+        assertThat(captured.list)
+                .extracting(ILoggingEvent::getFormattedMessage)
+                .as("the request line ends with a real duration, not a number from broken arithmetic")
+                .anyMatch(message -> message.contains(SOME_PATH) && message.matches(".* in \\d{1,4}ms$"));
+    }
+
     private Logger rootLogger() {
         return (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
     }

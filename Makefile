@@ -27,7 +27,7 @@ format: ## Auto-format the source
 cov: verify ## Coverage report at target/site/jacoco/index.html
 	@echo "report: target/site/jacoco/index.html"
 
-mutation: ## Mutation testing over the services (slow, on demand)
+mutation: ## Mutation testing over the whole domain (on demand)
 	$(MVN) -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage
 
 run: ## Run the API on the host against the compose database
