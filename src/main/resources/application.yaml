@@ -19,9 +19,6 @@ spring:
           batch_size: 50
   flyway:
     enabled: true
-  mvc:
-    problemdetails:
-      enabled: true
 
 voting:
   screens:
@@ -38,8 +35,6 @@ voting:
 
 server:
   port: ${PORT:8080}
-  error:
-    include-message: always
 
 management:
   endpoints:
