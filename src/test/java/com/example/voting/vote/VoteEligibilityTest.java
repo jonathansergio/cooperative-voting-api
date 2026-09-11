@@ -1,5 +1,6 @@
 package com.example.voting.vote;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,6 +22,17 @@ class VoteEligibilityTest {
 
     @Autowired
     private ProgrammableEligibility eligibility;
+
+    @Test
+    void checksEligibilityWithoutHoldingADatabaseTransactionOpen() throws Exception {
+        long topicId = topicWithAnOpenSession();
+
+        vote(topicId, "12345678901").andExpect(status().isCreated());
+
+        assertThat(eligibility.lastCheckRanInsideTransaction())
+                .as("the eligibility lookup is a network call and must not hold a pooled connection")
+                .isFalse();
+    }
 
     @Test
     void refusesTheVoteOfAMemberWhoIsNotAllowedToVote() throws Exception {
