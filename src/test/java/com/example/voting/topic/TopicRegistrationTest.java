@@ -31,7 +31,8 @@ class TopicRegistrationTest {
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.title").value("Reforma do estatuto"))
-                .andExpect(jsonPath("$.description").value("Votação da nova redação"));
+                .andExpect(jsonPath("$.description").value("Votação da nova redação"))
+                .andExpect(jsonPath("$.createdAt").value("2026-01-01T00:00:00Z"));
     }
 
     @Test

@@ -207,9 +207,17 @@
 						<artifactId>pitest-maven</artifactId>
 						<version>${pitest.version}</version>
 						<configuration>
+							<!-- Every class that holds a rule is mutated, not only services: the tally outcome,
+							     the session window and the registry translation live outside them. Wiring and
+							     configuration carry no rule worth mutating. -->
 							<targetClasses>
-								<param>com.example.voting.*.*Service</param>
+								<param>com.example.voting.*</param>
 							</targetClasses>
+							<excludedClasses>
+								<param>com.example.voting.VotingApplication</param>
+								<param>com.example.voting.*Config</param>
+								<param>com.example.voting.*Properties</param>
+							</excludedClasses>
 							<targetTests>
 								<param>com.example.voting.*</param>
 							</targetTests>

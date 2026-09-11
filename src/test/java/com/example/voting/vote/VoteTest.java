@@ -28,9 +28,11 @@ class VoteTest {
 
         vote(topicId, "12345678901", "YES")
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.greaterThan(0)))
                 .andExpect(jsonPath("$.topicId").value(topicId))
                 .andExpect(jsonPath("$.memberId").value("12345678901"))
-                .andExpect(jsonPath("$.choice").value("YES"));
+                .andExpect(jsonPath("$.choice").value("YES"))
+                .andExpect(jsonPath("$.castAt").value("2026-01-01T00:00:00Z"));
     }
 
     @Test
