@@ -17,6 +17,7 @@ replay_pid*
 .pit/
 pit-reports/
 load/results/
+.jqwik-database
 
 ### Environment ###
 .env
