@@ -34,7 +34,13 @@ public class VoteService {
         this.clock = clock;
     }
 
-    @Transactional
+    /**
+     * Deliberately not transactional. The eligibility lookup below is a network call that can take
+     * seconds, and a transaction open around it would hold a pooled database connection for all that
+     * time, so a slow upstream would drain the pool and stall every other request. Each step takes
+     * its own short transaction instead; the insert is a single statement and the unique constraint
+     * keeps it correct on its own.
+     */
     public VoteResponse cast(long topicId, String memberId, Choice choice) {
         requireTheTopicExists(topicId);
         requireAnOpenSession(topicId);

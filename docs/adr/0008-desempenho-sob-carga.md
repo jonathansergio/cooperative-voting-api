@@ -62,6 +62,14 @@ aplicação e passa a ser o do serviço de terceiro.
 O que já está feito a respeito: os dois timeouts são sempre definidos, então uma chamada lenta não prende
 uma thread indefinidamente, e o cliente HTTP reaproveita conexões em vez de abrir uma por voto.
 
+**A chamada acontece sem transação aberta.** Na primeira versão, o registro do voto era todo transacional:
+consultava a pauta, adquiria uma conexão do pool e a mantinha presa enquanto esperava o serviço externo
+responder. Com trinta conexões e um fornecedor lento, trinta votos parados bastariam para esgotar o pool e
+travar a API inteira, inclusive quem só queria ler o resultado. A revisão final encontrou isso, um teste
+passou a provar que a consulta roda fora de transação, e cada etapa agora usa uma transação curta e própria.
+A inserção é uma instrução só, e a restrição de unicidade continua garantindo a regra sem transação envolvendo
+o resto.
+
 O que **não** adianta: cache por CPF. Cada associado vota uma única vez por pauta, então a segunda consulta
 para o mesmo CPF praticamente não acontece.
 
